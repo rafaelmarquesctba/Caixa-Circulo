@@ -145,7 +145,7 @@
 // ══════════════════════════════════════════
 // COLE AQUI A URL DO SEU APPS SCRIPT
 // ══════════════════════════════════════════
-let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbym3om8isvKWwoNWrgrhky8jeg0Gb7l23nT6qGRxcYshmpN-Ymg_P_ya1tXJwAWP8ba/exec';
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwMIzdbHglmNyl_QJiKrhwg5euuO8Np755zjJEuC0nvlPGBkHfqwZRLGzZeKYqzi_M4/exec';
 
 let dados = { cultos:[], saidas:[], caixa:{conta:0,dinheiro:0}, fiados:[] };
 
@@ -153,11 +153,9 @@ function fmt(v) {
   return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
-async function api(payload) {
-  const r = await fetch(SCRIPT_URL, {
-    method:'POST',
-    body: JSON.stringify(payload)
-  });
+async function api(params) {
+  const qs = Object.entries(params).map(([k,v]) => encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
+  const r = await fetch(SCRIPT_URL + '?' + qs);
   return r.json();
 }
 
@@ -250,7 +248,7 @@ function render() {
                 <tr>
                   <td>${formatarData(r.values[0])}</td>
                   <td class="td-verde">${fmt(r.values[1])}</td>
-                  <td><button class="btn-del" onclick="deletar('deleteCulto',${r._index})" title="Remover">✕</button></td>
+                  <td><button class="btn-del" onclick="deletar('Cultos',${r._index})" title="Remover">✕</button></td>
                 </tr>`).join('')}
             </tbody>
             <tfoot><tr class="total-row"><td>Total</td><td class="td-verde">${fmt(totalEntradas)}</td><td></td></tr></tfoot>
@@ -283,7 +281,7 @@ function render() {
                   <td>${formatarData(r.values[0])}</td>
                   <td>${r.values[1]}</td>
                   <td class="td-vermelho">${fmt(r.values[2])}</td>
-                  <td><button class="btn-del" onclick="deletar('deleteSaida',${r._index})" title="Remover">✕</button></td>
+                  <td><button class="btn-del" onclick="deletar('Saidas',${r._index})" title="Remover">✕</button></td>
                 </tr>`).join('')}
             </tbody>
             <tfoot><tr class="total-row"><td colspan="2">Total</td><td class="td-vermelho">${fmt(totalSaidas)}</td><td></td></tr></tfoot>
@@ -347,7 +345,7 @@ function render() {
               <span>${r.values[0]}</span>
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="color:var(--dourado);font-weight:600;font-family:'Lora',serif">${fmt(r.values[1])}</span>
-                <button class="btn-del" onclick="deletar('deleteFiado',${r._index})" title="Remover">✕</button>
+                <button class="btn-del" onclick="deletar('Fiados',${r._index})" title="Remover">✕</button>
               </div>
             </div>`).join('')}
           <div class="fiado-total">
@@ -423,9 +421,9 @@ async function addFiado() {
   await carregar();
 }
 
-async function deletar(action, index) {
+async function deletar(sheet, index) {
   if (!confirm('Remover este item?')) return;
-  await api({ action, index });
+  await api({ action: 'deleteRow', sheet, index });
   await carregar();
 }
 
