@@ -7,278 +7,122 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --verde: #1D9E75;
-    --verde-claro: #E1F5EE;
-    --verde-medio: #9FE1CB;
-    --verde-escuro: #085041;
-    --vermelho: #D85A30;
-    --vermelho-claro: #FAECE7;
-    --vermelho-medio: #F0997B;
-    --dourado: #BA7517;
-    --dourado-claro: #FAEEDA;
-    --cinza-bg: #F7F5F0;
-    --cinza-card: #FFFFFF;
-    --cinza-borda: #E2DDD5;
-    --cinza-texto: #5F5E5A;
-    --texto: #2C2C2A;
-    --radius: 12px;
-    --radius-sm: 8px;
+    --verde: #1D9E75; --verde-claro: #E1F5EE; --verde-medio: #9FE1CB; --verde-escuro: #085041;
+    --vermelho: #D85A30; --vermelho-claro: #FAECE7; --vermelho-medio: #F0997B;
+    --dourado: #BA7517; --dourado-claro: #FAEEDA;
+    --cinza-bg: #F7F5F0; --cinza-card: #FFFFFF; --cinza-borda: #E2DDD5; --cinza-texto: #5F5E5A;
+    --texto: #2C2C2A; --radius: 12px; --radius-sm: 8px;
   }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cinza-bg);
-    color: var(--texto);
-    min-height: 100vh;
-    padding-bottom: 3rem;
-  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cinza-bg); color: var(--texto); min-height: 100vh; padding-bottom: 4rem; }
 
   /* Header */
-  .page-header {
-    background: var(--verde-escuro);
-    color: #fff;
-    padding: 2rem 1.5rem 3rem;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .page-header::before {
-    content: '';
-    position: absolute;
-    width: 300px; height: 300px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-    top: -80px; right: -60px;
-  }
-  .page-header::after {
-    content: '';
-    position: absolute;
-    width: 200px; height: 200px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.04);
-    bottom: -60px; left: -40px;
-  }
-  .header-icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
-    opacity: 0.9;
-  }
-  .page-header h1 {
-    font-family: 'Lora', serif;
-    font-size: 1.6rem;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-  }
-  .page-header p {
-    font-size: 0.85rem;
-    opacity: 0.7;
-    margin-top: 4px;
-    font-weight: 300;
-  }
-  .header-data {
-    font-size: 0.8rem;
-    opacity: 0.6;
-    margin-top: 8px;
-  }
+  .page-header { background: var(--verde-escuro); color: #fff; padding: 2rem 1.5rem 3rem; text-align: center; position: relative; overflow: hidden; }
+  .page-header::before { content:''; position:absolute; width:300px; height:300px; border-radius:50%; background:rgba(255,255,255,0.04); top:-80px; right:-60px; }
+  .page-header::after { content:''; position:absolute; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,0.04); bottom:-60px; left:-40px; }
+  .header-icon { font-size:2rem; margin-bottom:0.5rem; opacity:0.9; }
+  .page-header h1 { font-family:'Lora',serif; font-size:1.6rem; font-weight:600; }
+  .page-header p { font-size:0.85rem; opacity:0.7; margin-top:4px; font-weight:300; }
+
+  /* Loader */
+  .loader { text-align:center; padding:3rem; color:var(--cinza-texto); font-size:0.9rem; }
+  .spinner { width:32px; height:32px; border:3px solid var(--cinza-borda); border-top-color:var(--verde); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 1rem; }
+  @keyframes spin { to { transform:rotate(360deg); } }
 
   /* Container */
-  .container {
-    max-width: 700px;
-    margin: -1.5rem auto 0;
-    padding: 0 1rem;
-    position: relative;
-    z-index: 1;
-  }
+  .container { max-width:700px; margin:-1.5rem auto 0; padding:0 1rem; position:relative; z-index:1; }
 
-  /* Cards resumo */
-  .resumo-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 1.5rem;
-  }
-  .resumo-card {
-    background: var(--cinza-card);
-    border-radius: var(--radius);
-    padding: 1rem;
-    border: 1px solid var(--cinza-borda);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    text-align: center;
-  }
-  .resumo-card .label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--cinza-texto);
-    margin-bottom: 6px;
-    font-weight: 500;
-  }
-  .resumo-card .valor {
-    font-family: 'Lora', serif;
-    font-size: 1.2rem;
-    font-weight: 600;
-  }
-  .resumo-card.saldo .valor { color: var(--texto); }
-  .resumo-card.entrada .valor { color: var(--verde); }
-  .resumo-card.saida .valor { color: var(--vermelho); }
-  .resumo-card .sub {
-    font-size: 0.68rem;
-    color: var(--cinza-texto);
-    margin-top: 3px;
-  }
+  /* Resumo cards */
+  .resumo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:1.5rem; }
+  .resumo-card { background:var(--cinza-card); border-radius:var(--radius); padding:1rem; border:1px solid var(--cinza-borda); box-shadow:0 2px 8px rgba(0,0,0,0.06); text-align:center; }
+  .resumo-card .label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--cinza-texto); margin-bottom:6px; font-weight:500; }
+  .resumo-card .valor { font-family:'Lora',serif; font-size:1.15rem; font-weight:600; }
+  .resumo-card .sub { font-size:0.68rem; color:var(--cinza-texto); margin-top:3px; }
+  .resumo-card.saldo .valor { color:var(--texto); }
+  .resumo-card.entrada .valor { color:var(--verde); }
+  .resumo-card.saida .valor { color:var(--vermelho); }
+
+  /* Saldo destaque */
+  .saldo-destaque { background:var(--verde-escuro); color:#fff; border-radius:var(--radius); padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; box-shadow:0 4px 16px rgba(8,80,65,0.25); }
+  .saldo-destaque .sd-label { font-size:0.78rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px; }
+  .saldo-destaque .sd-val { font-family:'Lora',serif; font-size:1.8rem; font-weight:600; }
+  .saldo-destaque .sd-icon { font-size:2.2rem; opacity:0.4; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:4px; background:var(--cinza-card); border-radius:var(--radius); border:1px solid var(--cinza-borda); padding:4px; margin-bottom:1rem; }
+  .tab { flex:1; padding:8px 4px; border:none; background:transparent; border-radius:var(--radius-sm); font-size:0.78rem; font-weight:500; cursor:pointer; color:var(--cinza-texto); transition:all 0.15s; font-family:'DM Sans',sans-serif; }
+  .tab.active { background:var(--verde-escuro); color:#fff; }
 
   /* Seção */
-  .secao {
-    background: var(--cinza-card);
-    border-radius: var(--radius);
-    border: 1px solid var(--cinza-borda);
-    margin-bottom: 1rem;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  }
-  .secao-header {
-    padding: 1rem 1.25rem 0.75rem;
-    border-bottom: 1px solid var(--cinza-borda);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-  .secao-titulo {
-    font-family: 'Lora', serif;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--texto);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .secao-titulo .icon { font-size: 1rem; }
-  .secao-body { padding: 1rem 1.25rem; }
+  .secao { background:var(--cinza-card); border-radius:var(--radius); border:1px solid var(--cinza-borda); margin-bottom:1rem; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+  .secao-header { padding:1rem 1.25rem 0.75rem; border-bottom:1px solid var(--cinza-borda); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .secao-titulo { font-family:'Lora',serif; font-size:1rem; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .secao-body { padding:1rem 1.25rem; }
 
-  /* Tabela entradas do culto */
-  .tabela {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-  }
-  .tabela th {
-    text-align: left;
-    padding: 6px 10px;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--cinza-texto);
-    font-weight: 500;
-    border-bottom: 1px solid var(--cinza-borda);
-  }
-  .tabela td {
-    padding: 9px 10px;
-    border-bottom: 1px solid #F0EDE8;
-    color: var(--texto);
-  }
-  .tabela tr:last-child td { border-bottom: none; }
-  .tabela tr:hover td { background: #FAFAF8; }
-  .tabela .td-valor { text-align: right; font-weight: 500; }
-  .tabela .td-verde { color: var(--verde); text-align: right; font-weight: 500; }
-  .tabela .td-vermelho { color: var(--vermelho); text-align: right; font-weight: 500; }
-  .tabela .total-row td {
-    font-weight: 600;
-    background: var(--cinza-bg);
-    border-top: 2px solid var(--cinza-borda);
-    border-bottom: none;
-    font-family: 'Lora', serif;
-  }
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 0.72rem;
-    font-weight: 500;
-  }
-  .badge-verde { background: var(--verde-claro); color: var(--verde-escuro); }
-  .badge-vermelho { background: var(--vermelho-claro); color: #71280F; }
-  .badge-dourado { background: var(--dourado-claro); color: #633806; }
+  /* Badge */
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.72rem; font-weight:500; }
+  .badge-verde { background:var(--verde-claro); color:#085041; }
+  .badge-vermelho { background:var(--vermelho-claro); color:#71280F; }
+  .badge-dourado { background:var(--dourado-claro); color:#633806; }
 
-  /* Caixa geral */
-  .caixa-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid #F0EDE8;
-    font-size: 0.9rem;
-  }
-  .caixa-row:last-child { border-bottom: none; }
-  .caixa-row .desc { color: var(--cinza-texto); font-size: 0.82rem; }
-  .caixa-row .val { font-family: 'Lora', serif; font-weight: 600; font-size: 1.05rem; }
+  /* Tabela */
+  .tabela { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  .tabela th { text-align:left; padding:6px 10px; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--cinza-texto); font-weight:500; border-bottom:1px solid var(--cinza-borda); }
+  .tabela td { padding:9px 10px; border-bottom:1px solid #F0EDE8; color:var(--texto); }
+  .tabela tr:last-child td { border-bottom:none; }
+  .tabela tr:hover td { background:#FAFAF8; }
+  .td-verde { text-align:right; font-weight:500; color:var(--verde); }
+  .td-vermelho { text-align:right; font-weight:500; color:var(--vermelho); }
+  .total-row td { font-weight:600; background:var(--cinza-bg); border-top:2px solid var(--cinza-borda); border-bottom:none; font-family:'Lora',serif; }
+
+  /* Botão deletar */
+  .btn-del { background:none; border:none; cursor:pointer; color:#ccc; font-size:1rem; padding:2px 6px; border-radius:4px; transition:color 0.15s; }
+  .btn-del:hover { color:var(--vermelho); }
+
+  /* Form */
+  .form-add { background:var(--cinza-bg); border-radius:var(--radius-sm); padding:1rem; margin-top:1rem; border:1px solid var(--cinza-borda); }
+  .form-add h4 { font-size:0.8rem; font-weight:500; color:var(--cinza-texto); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
+  .form-row.full { grid-template-columns:1fr; }
+  .form-group { display:flex; flex-direction:column; gap:3px; }
+  .form-group label { font-size:0.72rem; color:var(--cinza-texto); font-weight:500; }
+  .form-group input { font-size:0.88rem; padding:8px 10px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); background:#fff; color:var(--texto); outline:none; font-family:'DM Sans',sans-serif; }
+  .form-group input:focus { border-color:var(--verde); box-shadow:0 0 0 2px rgba(29,158,117,0.1); }
+  .btn-add { width:100%; padding:10px; border:none; border-radius:var(--radius-sm); background:var(--verde-escuro); color:#fff; font-size:0.88rem; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; margin-top:4px; transition:opacity 0.15s; }
+  .btn-add:hover { opacity:0.88; }
+  .btn-add:disabled { opacity:0.5; cursor:not-allowed; }
+
+  /* Caixa rows */
+  .caixa-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #F0EDE8; font-size:0.9rem; }
+  .caixa-row:last-child { border-bottom:none; }
+  .caixa-row .desc { color:var(--cinza-texto); font-size:0.82rem; }
+  .caixa-row .val { font-family:'Lora',serif; font-weight:600; font-size:1.05rem; }
 
   /* Fiados */
-  .fiado-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #F0EDE8;
-    font-size: 0.88rem;
-  }
-  .fiado-item:last-child { border-bottom: none; }
-  .fiado-nome { color: var(--texto); }
-  .fiado-val { color: var(--dourado); font-weight: 600; font-family: 'Lora', serif; }
-  .fiado-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0 0;
-    border-top: 2px solid var(--cinza-borda);
-    margin-top: 4px;
-    font-size: 0.88rem;
-  }
-  .fiado-total .fl { color: var(--cinza-texto); font-weight: 500; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
-  .fiado-total .fv { color: var(--dourado); font-weight: 700; font-family: 'Lora', serif; font-size: 1.05rem; }
+  .fiado-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F0EDE8; font-size:0.88rem; }
+  .fiado-item:last-child { border-bottom:none; }
+  .fiado-total { display:flex; justify-content:space-between; align-items:center; padding:10px 0 0; border-top:2px solid var(--cinza-borda); margin-top:4px; }
+  .fiado-total .fl { color:var(--cinza-texto); font-weight:500; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; }
+  .fiado-total .fv { color:var(--dourado); font-weight:700; font-family:'Lora',serif; font-size:1.05rem; }
 
-  /* Destaque saldo final */
-  .saldo-destaque {
-    background: var(--verde-escuro);
-    color: #fff;
-    border-radius: var(--radius);
-    padding: 1.25rem 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    box-shadow: 0 4px 16px rgba(8,80,65,0.25);
-  }
-  .saldo-destaque .sd-label {
-    font-size: 0.78rem;
-    opacity: 0.75;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 4px;
-  }
-  .saldo-destaque .sd-val {
-    font-family: 'Lora', serif;
-    font-size: 1.8rem;
-    font-weight: 600;
-  }
-  .saldo-destaque .sd-icon { font-size: 2.2rem; opacity: 0.4; }
+  /* Panel views */
+  .panel { display:none; }
+  .panel.active { display:block; }
 
-  /* Footer */
-  .rodape {
-    text-align: center;
-    font-size: 0.75rem;
-    color: var(--cinza-texto);
-    margin-top: 2rem;
-    opacity: 0.7;
-  }
+  /* Config banner */
+  .config-banner { background:#FFF8E7; border:1px solid #F5C4B3; border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:1rem; font-size:0.85rem; color:#71280F; }
+  .config-banner strong { display:block; margin-bottom:4px; }
+  .config-banner input { width:100%; margin-top:8px; padding:8px 10px; border:1px solid #F0997B; border-radius:var(--radius-sm); font-size:0.85rem; font-family:'DM Sans',sans-serif; background:#fff; outline:none; }
+  .config-banner button { margin-top:8px; padding:8px 16px; background:var(--verde-escuro); color:#fff; border:none; border-radius:var(--radius-sm); font-size:0.83rem; cursor:pointer; font-family:'DM Sans',sans-serif; }
 
-  /* Responsivo */
-  @media (max-width: 480px) {
-    .resumo-grid { grid-template-columns: 1fr 1fr; }
-    .resumo-card.saldo { grid-column: 1 / -1; }
-    .page-header h1 { font-size: 1.3rem; }
-    .saldo-destaque .sd-val { font-size: 1.4rem; }
+  .rodape { text-align:center; font-size:0.75rem; color:var(--cinza-texto); margin-top:2rem; opacity:0.7; }
+
+  @media(max-width:480px) {
+    .resumo-grid { grid-template-columns:1fr 1fr; }
+    .resumo-card.saldo { grid-column:1/-1; }
+    .page-header h1 { font-size:1.3rem; }
+    .saldo-destaque .sd-val { font-size:1.4rem; }
+    .form-row { grid-template-columns:1fr; }
   }
 </style>
 </head>
@@ -288,215 +132,310 @@
   <div class="header-icon">✝</div>
   <h1>Círculo de Oração</h1>
   <p>Controle de Caixa</p>
-  <div class="header-data">Período: maio / junho 2026</div>
 </div>
 
-<div class="container">
-
-  <!-- Resumo -->
-  <div class="resumo-grid">
-    <div class="resumo-card saldo">
-      <div class="label">Total em Caixa</div>
-      <div class="valor">R$ 6.034,36</div>
-      <div class="sub">conta + dinheiro</div>
-    </div>
-    <div class="resumo-card entrada">
-      <div class="label">Entradas Culto</div>
-      <div class="valor">R$ 464,00</div>
-      <div class="sub">4 cultos</div>
-    </div>
-    <div class="resumo-card saida">
-      <div class="label">Saídas</div>
-      <div class="valor">R$ 484,80</div>
-      <div class="sub">5 lançamentos</div>
-    </div>
+<div class="container" id="app">
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    Carregando dados...
   </div>
-
-  <!-- Saldo total destacado -->
-  <div class="saldo-destaque">
-    <div>
-      <div class="sd-label">Saldo disponível</div>
-      <div class="sd-val">R$ 6.034,36</div>
-    </div>
-    <div class="sd-icon">🏦</div>
-  </div>
-
-  <!-- Entradas do culto -->
-  <div class="secao">
-    <div class="secao-header">
-      <div class="secao-titulo">
-        <span class="icon">📥</span> Entradas — Ofertas do Culto
-      </div>
-      <span class="badge badge-verde">+R$ 464,00</span>
-    </div>
-    <div class="secao-body">
-      <table class="tabela">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Tipo</th>
-            <th style="text-align:right">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>07/05/2026</td>
-            <td><span class="badge badge-verde">Culto</span></td>
-            <td class="td-verde">R$ 65,70</td>
-          </tr>
-          <tr>
-            <td>14/05/2026</td>
-            <td><span class="badge badge-verde">Culto</span></td>
-            <td class="td-verde">R$ 156,50</td>
-          </tr>
-          <tr>
-            <td>21/05/2026</td>
-            <td><span class="badge badge-verde">Culto</span></td>
-            <td class="td-verde">R$ 112,00</td>
-          </tr>
-          <tr>
-            <td>28/05/2026</td>
-            <td><span class="badge badge-verde">Culto</span></td>
-            <td class="td-verde">R$ 129,80</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr class="total-row">
-            <td colspan="2">Total entradas culto</td>
-            <td class="td-verde">R$ 464,00</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-
-  <!-- Saídas -->
-  <div class="secao">
-    <div class="secao-header">
-      <div class="secao-titulo">
-        <span class="icon">📤</span> Saídas
-      </div>
-      <span class="badge badge-vermelho">−R$ 484,80</span>
-    </div>
-    <div class="secao-body">
-      <table class="tabela">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Descrição</th>
-            <th style="text-align:right">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>08/05</td>
-            <td>Pregadora Elaine</td>
-            <td class="td-vermelho">R$ 150,00</td>
-          </tr>
-          <tr>
-            <td>21/05</td>
-            <td>Pregadora Maria de Lurdes</td>
-            <td class="td-vermelho">R$ 150,00</td>
-          </tr>
-          <tr>
-            <td>28/05</td>
-            <td>Pregadora Regina</td>
-            <td class="td-vermelho">R$ 150,00</td>
-          </tr>
-          <tr>
-            <td>08/05</td>
-            <td>Papel pão</td>
-            <td class="td-vermelho">R$ 21,90</td>
-          </tr>
-          <tr>
-            <td>27/05</td>
-            <td>Envelopes</td>
-            <td class="td-vermelho">R$ 12,90</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr class="total-row">
-            <td colspan="2">Total saídas</td>
-            <td class="td-vermelho">R$ 484,80</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-
-  <!-- Caixa geral -->
-  <div class="secao">
-    <div class="secao-header">
-      <div class="secao-titulo">
-        <span class="icon">💰</span> Caixa Geral (06/06/2026)
-      </div>
-    </div>
-    <div class="secao-body">
-      <div class="caixa-row">
-        <div>
-          <div>Em conta</div>
-          <div class="desc">Saldo bancário</div>
-        </div>
-        <div class="val" style="color:var(--verde)">R$ 3.935,36</div>
-      </div>
-      <div class="caixa-row">
-        <div>
-          <div>Em dinheiro</div>
-          <div class="desc">Caixa físico</div>
-        </div>
-        <div class="val" style="color:var(--verde)">R$ 2.099,00</div>
-      </div>
-      <div class="caixa-row" style="padding-top:12px">
-        <div style="font-weight:600; font-family:'Lora',serif">Total em caixa</div>
-        <div class="val" style="font-size:1.2rem">R$ 6.034,36</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Fiados pão 08/05 -->
-  <div class="secao">
-    <div class="secao-header">
-      <div class="secao-titulo">
-        <span class="icon">📋</span> Fiados — Pão (08/05)
-      </div>
-      <span class="badge badge-dourado">R$ 120,00 a receber</span>
-    </div>
-    <div class="secao-body">
-      <div class="fiado-item">
-        <span class="fiado-nome">Juninho</span>
-        <span class="fiado-val">R$ 15,00</span>
-      </div>
-      <div class="fiado-item">
-        <span class="fiado-nome">Claúdia (Vanessa)</span>
-        <span class="fiado-val">R$ 15,00</span>
-      </div>
-      <div class="fiado-item">
-        <span class="fiado-nome">Hélida</span>
-        <span class="fiado-val">R$ 15,00</span>
-      </div>
-      <div class="fiado-item">
-        <span class="fiado-nome">Mirian Mazali</span>
-        <span class="fiado-val">R$ 15,00</span>
-      </div>
-      <div class="fiado-item">
-        <span class="fiado-nome">Leila</span>
-        <span class="fiado-val">R$ 30,00</span>
-      </div>
-      <div class="fiado-item">
-        <span class="fiado-nome">Angélica</span>
-        <span class="fiado-val">R$ 30,00</span>
-      </div>
-      <div class="fiado-total">
-        <span class="fl">Total a receber</span>
-        <span class="fv">R$ 120,00</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="rodape">
-    Círculo de Oração · Atualizado em junho 2026
-  </div>
-
 </div>
+
+<script>
+// ══════════════════════════════════════════
+// COLE AQUI A URL DO SEU APPS SCRIPT
+// ══════════════════════════════════════════
+let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDXSZX8DOHeGr2dVjePeXzJuje7fLCsSWxXWj-35yax37HQchBn8E6lUW5BuM35IPq/exec';
+
+let dados = { cultos:[], saidas:[], caixa:{conta:0,dinheiro:0}, fiados:[] };
+
+function fmt(v) {
+  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+async function api(payload) {
+  const r = await fetch(SCRIPT_URL, {
+    method:'POST',
+    body: JSON.stringify(payload)
+  });
+  return r.json();
+}
+
+async function carregar() {
+  if (!SCRIPT_URL) { renderConfigBanner(); return; }
+  document.getElementById('loader').style.display = 'block';
+  try {
+    dados = await api({ action:'getDados' });
+    render();
+  } catch(e) {
+    document.getElementById('app').innerHTML = `<div class="loader">Erro ao carregar dados. Verifique a URL do script.</div>`;
+    renderConfigBanner(true);
+  }
+}
+
+function renderConfigBanner(append) {
+  const div = document.createElement('div');
+  div.className = 'config-banner';
+  div.innerHTML = `
+    <strong>⚙️ Configure a URL do Apps Script</strong>
+    Cole abaixo a URL gerada ao publicar o script no Google Apps Script:
+    <input type="text" id="url-input" placeholder="https://script.google.com/macros/s/.../exec" value="${SCRIPT_URL}">
+    <button onclick="salvarUrl()">Salvar e carregar</button>
+  `;
+  if (append) document.getElementById('app').appendChild(div);
+  else document.getElementById('app').innerHTML = '';
+  if (!append) document.getElementById('app').appendChild(div);
+}
+
+function salvarUrl() {
+  const url = document.getElementById('url-input').value.trim();
+  if (!url) return;
+  SCRIPT_URL = url;
+  localStorage.setItem('caixa_script_url', url);
+  carregar();
+}
+
+function render() {
+  const totalEntradas = dados.cultos.reduce((a,r)=>a+(parseFloat(r.values[1])||0),0);
+  const totalSaidas   = dados.saidas.reduce((a,r)=>a+(parseFloat(r.values[2])||0),0);
+  const totalCaixa    = (parseFloat(dados.caixa.conta)||0) + (parseFloat(dados.caixa.dinheiro)||0);
+  const totalFiados   = dados.fiados.reduce((a,r)=>a+(parseFloat(r.values[1])||0),0);
+
+  document.getElementById('app').innerHTML = `
+    <div class="resumo-grid">
+      <div class="resumo-card saldo">
+        <div class="label">Total em Caixa</div>
+        <div class="valor">${fmt(totalCaixa)}</div>
+        <div class="sub">conta + dinheiro</div>
+      </div>
+      <div class="resumo-card entrada">
+        <div class="label">Entradas Culto</div>
+        <div class="valor">${fmt(totalEntradas)}</div>
+        <div class="sub">${dados.cultos.length} culto(s)</div>
+      </div>
+      <div class="resumo-card saida">
+        <div class="label">Saídas</div>
+        <div class="valor">${fmt(totalSaidas)}</div>
+        <div class="sub">${dados.saidas.length} lançamento(s)</div>
+      </div>
+    </div>
+
+    <div class="saldo-destaque">
+      <div>
+        <div class="sd-label">Saldo disponível</div>
+        <div class="sd-val">${fmt(totalCaixa)}</div>
+      </div>
+      <div class="sd-icon">🏦</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="showPanel('cultos',this)">📥 Cultos</button>
+      <button class="tab" onclick="showPanel('saidas',this)">📤 Saídas</button>
+      <button class="tab" onclick="showPanel('caixa',this)">💰 Caixa</button>
+      <button class="tab" onclick="showPanel('fiados',this)">📋 Fiados</button>
+    </div>
+
+    <!-- CULTOS -->
+    <div id="panel-cultos" class="panel active">
+      <div class="secao">
+        <div class="secao-header">
+          <div class="secao-titulo">📥 Ofertas do Culto</div>
+          <span class="badge badge-verde">+${fmt(totalEntradas)}</span>
+        </div>
+        <div class="secao-body">
+          <table class="tabela">
+            <thead><tr><th>Data</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+            <tbody>
+              ${dados.cultos.map(r=>`
+                <tr>
+                  <td>${formatarData(r.values[0])}</td>
+                  <td class="td-verde">${fmt(r.values[1])}</td>
+                  <td><button class="btn-del" onclick="deletar('deleteCulto',${r._index})" title="Remover">✕</button></td>
+                </tr>`).join('')}
+            </tbody>
+            <tfoot><tr class="total-row"><td>Total</td><td class="td-verde">${fmt(totalEntradas)}</td><td></td></tr></tfoot>
+          </table>
+          <div class="form-add">
+            <h4>+ Adicionar culto</h4>
+            <div class="form-row">
+              <div class="form-group"><label>Data</label><input type="date" id="c-data"></div>
+              <div class="form-group"><label>Valor (R$)</label><input type="number" id="c-valor" step="0.01" placeholder="0,00"></div>
+            </div>
+            <button class="btn-add" onclick="addCulto()">Registrar oferta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SAÍDAS -->
+    <div id="panel-saidas" class="panel">
+      <div class="secao">
+        <div class="secao-header">
+          <div class="secao-titulo">📤 Saídas</div>
+          <span class="badge badge-vermelho">−${fmt(totalSaidas)}</span>
+        </div>
+        <div class="secao-body">
+          <table class="tabela">
+            <thead><tr><th>Data</th><th>Descrição</th><th style="text-align:right">Valor</th><th></th></tr></thead>
+            <tbody>
+              ${dados.saidas.map(r=>`
+                <tr>
+                  <td>${formatarData(r.values[0])}</td>
+                  <td>${r.values[1]}</td>
+                  <td class="td-vermelho">${fmt(r.values[2])}</td>
+                  <td><button class="btn-del" onclick="deletar('deleteSaida',${r._index})" title="Remover">✕</button></td>
+                </tr>`).join('')}
+            </tbody>
+            <tfoot><tr class="total-row"><td colspan="2">Total</td><td class="td-vermelho">${fmt(totalSaidas)}</td><td></td></tr></tfoot>
+          </table>
+          <div class="form-add">
+            <h4>+ Adicionar saída</h4>
+            <div class="form-row">
+              <div class="form-group"><label>Data</label><input type="date" id="s-data"></div>
+              <div class="form-group"><label>Valor (R$)</label><input type="number" id="s-valor" step="0.01" placeholder="0,00"></div>
+            </div>
+            <div class="form-row full">
+              <div class="form-group"><label>Descrição</label><input type="text" id="s-desc" placeholder="Ex: Pregadora, material..."></div>
+            </div>
+            <button class="btn-add" onclick="addSaida()">Registrar saída</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAIXA -->
+    <div id="panel-caixa" class="panel">
+      <div class="secao">
+        <div class="secao-header">
+          <div class="secao-titulo">💰 Caixa Geral</div>
+        </div>
+        <div class="secao-body">
+          <div class="caixa-row">
+            <div><div>Em conta</div><div class="desc">Saldo bancário</div></div>
+            <div class="val" style="color:var(--verde)">${fmt(dados.caixa.conta)}</div>
+          </div>
+          <div class="caixa-row">
+            <div><div>Em dinheiro</div><div class="desc">Caixa físico</div></div>
+            <div class="val" style="color:var(--verde)">${fmt(dados.caixa.dinheiro)}</div>
+          </div>
+          <div class="caixa-row">
+            <div style="font-weight:600;font-family:'Lora',serif">Total</div>
+            <div class="val" style="font-size:1.2rem">${fmt(totalCaixa)}</div>
+          </div>
+          <div class="form-add">
+            <h4>✏️ Atualizar saldo</h4>
+            <div class="form-row">
+              <div class="form-group"><label>Em conta (R$)</label><input type="number" id="cx-conta" step="0.01" value="${dados.caixa.conta}"></div>
+              <div class="form-group"><label>Em dinheiro (R$)</label><input type="number" id="cx-din" step="0.01" value="${dados.caixa.dinheiro}"></div>
+            </div>
+            <button class="btn-add" onclick="updateCaixa()">Salvar saldo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIADOS -->
+    <div id="panel-fiados" class="panel">
+      <div class="secao">
+        <div class="secao-header">
+          <div class="secao-titulo">📋 Fiados — Pão</div>
+          <span class="badge badge-dourado">${fmt(totalFiados)} a receber</span>
+        </div>
+        <div class="secao-body">
+          ${dados.fiados.map(r=>`
+            <div class="fiado-item">
+              <span>${r.values[0]}</span>
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="color:var(--dourado);font-weight:600;font-family:'Lora',serif">${fmt(r.values[1])}</span>
+                <button class="btn-del" onclick="deletar('deleteFiado',${r._index})" title="Remover">✕</button>
+              </div>
+            </div>`).join('')}
+          <div class="fiado-total">
+            <span class="fl">Total a receber</span>
+            <span class="fv">${fmt(totalFiados)}</span>
+          </div>
+          <div class="form-add">
+            <h4>+ Adicionar fiado</h4>
+            <div class="form-row">
+              <div class="form-group"><label>Nome</label><input type="text" id="f-nome" placeholder="Nome da pessoa"></div>
+              <div class="form-group"><label>Valor (R$)</label><input type="number" id="f-valor" step="0.01" placeholder="0,00"></div>
+            </div>
+            <button class="btn-add" onclick="addFiado()">Registrar fiado</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape">Círculo de Oração · Dados sincronizados com Google Planilhas</div>
+  `;
+
+  // datas padrão hoje
+  const hoje = new Date().toISOString().split('T')[0];
+  ['c-data','s-data'].forEach(id => { const el=document.getElementById(id); if(el) el.value=hoje; });
+}
+
+function formatarData(val) {
+  if (!val) return '';
+  if (typeof val === 'string') return val;
+  // Se vier como número serial do Excel/Sheets (não esperado, mas seguro)
+  const d = new Date(val);
+  if (isNaN(d)) return val;
+  return d.toLocaleDateString('pt-BR');
+}
+
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function addCulto() {
+  const data  = document.getElementById('c-data').value;
+  const valor = document.getElementById('c-valor').value;
+  if (!data || !valor) { alert('Preencha data e valor.'); return; }
+  setLoading('c-btn', true);
+  await api({ action:'addCulto', data, valor });
+  await carregar();
+}
+
+async function addSaida() {
+  const data     = document.getElementById('s-data').value;
+  const valor    = document.getElementById('s-valor').value;
+  const descricao = document.getElementById('s-desc').value.trim();
+  if (!data || !valor || !descricao) { alert('Preencha todos os campos.'); return; }
+  await api({ action:'addSaida', data, valor, descricao });
+  await carregar();
+}
+
+async function updateCaixa() {
+  const conta    = document.getElementById('cx-conta').value;
+  const dinheiro = document.getElementById('cx-din').value;
+  await api({ action:'setCaixa', conta, dinheiro });
+  await carregar();
+}
+
+async function addFiado() {
+  const nome  = document.getElementById('f-nome').value.trim();
+  const valor = document.getElementById('f-valor').value;
+  if (!nome || !valor) { alert('Preencha nome e valor.'); return; }
+  await api({ action:'addFiado', nome, valor });
+  await carregar();
+}
+
+async function deletar(action, index) {
+  if (!confirm('Remover este item?')) return;
+  await api({ action, index });
+  await carregar();
+}
+
+function setLoading(id, state) {
+  const el = document.getElementById(id);
+  if (el) el.disabled = state;
+}
+
+// Inicia
+carregar();
+</script>
 </body>
 </html>
