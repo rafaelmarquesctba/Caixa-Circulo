@@ -1,442 +1,139 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Caixa — Círculo de Oração</title>
-<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --verde: #1D9E75; --verde-claro: #E1F5EE; --verde-medio: #9FE1CB; --verde-escuro: #085041;
-    --vermelho: #D85A30; --vermelho-claro: #FAECE7; --vermelho-medio: #F0997B;
-    --dourado: #BA7517; --dourado-claro: #FAEEDA;
-    --cinza-bg: #F7F5F0; --cinza-card: #FFFFFF; --cinza-borda: #E2DDD5; --cinza-texto: #5F5E5A;
-    --texto: #2C2C2A; --radius: 12px; --radius-sm: 8px;
-  }
-  body { font-family: 'DM Sans', sans-serif; background: var(--cinza-bg); color: var(--texto); min-height: 100vh; padding-bottom: 4rem; }
+// =============================================
+// CAIXA CÍRCULO DE ORAÇÃO — Google Apps Script
+// =============================================
 
-  /* Header */
-  .page-header { background: var(--verde-escuro); color: #fff; padding: 2rem 1.5rem 3rem; text-align: center; position: relative; overflow: hidden; }
-  .page-header::before { content:''; position:absolute; width:300px; height:300px; border-radius:50%; background:rgba(255,255,255,0.04); top:-80px; right:-60px; }
-  .page-header::after { content:''; position:absolute; width:200px; height:200px; border-radius:50%; background:rgba(255,255,255,0.04); bottom:-60px; left:-40px; }
-  .header-icon { font-size:2rem; margin-bottom:0.5rem; opacity:0.9; }
-  .page-header h1 { font-family:'Lora',serif; font-size:1.6rem; font-weight:600; }
-  .page-header p { font-size:0.85rem; opacity:0.7; margin-top:4px; font-weight:300; }
+function doGet(e) {
+  const p = e.parameter;
+  const action = p.action;
+  let result;
 
-  /* Loader */
-  .loader { text-align:center; padding:3rem; color:var(--cinza-texto); font-size:0.9rem; }
-  .spinner { width:32px; height:32px; border:3px solid var(--cinza-borda); border-top-color:var(--verde); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 1rem; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-
-  /* Container */
-  .container { max-width:700px; margin:-1.5rem auto 0; padding:0 1rem; position:relative; z-index:1; }
-
-  /* Resumo cards */
-  .resumo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:1.5rem; }
-  .resumo-card { background:var(--cinza-card); border-radius:var(--radius); padding:1rem; border:1px solid var(--cinza-borda); box-shadow:0 2px 8px rgba(0,0,0,0.06); text-align:center; }
-  .resumo-card .label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--cinza-texto); margin-bottom:6px; font-weight:500; }
-  .resumo-card .valor { font-family:'Lora',serif; font-size:1.15rem; font-weight:600; }
-  .resumo-card .sub { font-size:0.68rem; color:var(--cinza-texto); margin-top:3px; }
-  .resumo-card.saldo .valor { color:var(--texto); }
-  .resumo-card.entrada .valor { color:var(--verde); }
-  .resumo-card.saida .valor { color:var(--vermelho); }
-
-  /* Saldo destaque */
-  .saldo-destaque { background:var(--verde-escuro); color:#fff; border-radius:var(--radius); padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; box-shadow:0 4px 16px rgba(8,80,65,0.25); }
-  .saldo-destaque .sd-label { font-size:0.78rem; opacity:0.75; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px; }
-  .saldo-destaque .sd-val { font-family:'Lora',serif; font-size:1.8rem; font-weight:600; }
-  .saldo-destaque .sd-icon { font-size:2.2rem; opacity:0.4; }
-
-  /* Tabs */
-  .tabs { display:flex; gap:4px; background:var(--cinza-card); border-radius:var(--radius); border:1px solid var(--cinza-borda); padding:4px; margin-bottom:1rem; }
-  .tab { flex:1; padding:8px 4px; border:none; background:transparent; border-radius:var(--radius-sm); font-size:0.78rem; font-weight:500; cursor:pointer; color:var(--cinza-texto); transition:all 0.15s; font-family:'DM Sans',sans-serif; }
-  .tab.active { background:var(--verde-escuro); color:#fff; }
-
-  /* Seção */
-  .secao { background:var(--cinza-card); border-radius:var(--radius); border:1px solid var(--cinza-borda); margin-bottom:1rem; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
-  .secao-header { padding:1rem 1.25rem 0.75rem; border-bottom:1px solid var(--cinza-borda); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
-  .secao-titulo { font-family:'Lora',serif; font-size:1rem; font-weight:600; display:flex; align-items:center; gap:8px; }
-  .secao-body { padding:1rem 1.25rem; }
-
-  /* Badge */
-  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:0.72rem; font-weight:500; }
-  .badge-verde { background:var(--verde-claro); color:#085041; }
-  .badge-vermelho { background:var(--vermelho-claro); color:#71280F; }
-  .badge-dourado { background:var(--dourado-claro); color:#633806; }
-
-  /* Tabela */
-  .tabela { width:100%; border-collapse:collapse; font-size:0.85rem; }
-  .tabela th { text-align:left; padding:6px 10px; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--cinza-texto); font-weight:500; border-bottom:1px solid var(--cinza-borda); }
-  .tabela td { padding:9px 10px; border-bottom:1px solid #F0EDE8; color:var(--texto); }
-  .tabela tr:last-child td { border-bottom:none; }
-  .tabela tr:hover td { background:#FAFAF8; }
-  .td-verde { text-align:right; font-weight:500; color:var(--verde); }
-  .td-vermelho { text-align:right; font-weight:500; color:var(--vermelho); }
-  .total-row td { font-weight:600; background:var(--cinza-bg); border-top:2px solid var(--cinza-borda); border-bottom:none; font-family:'Lora',serif; }
-
-  /* Botão deletar */
-  .btn-del { background:none; border:none; cursor:pointer; color:#ccc; font-size:1rem; padding:2px 6px; border-radius:4px; transition:color 0.15s; }
-  .btn-del:hover { color:var(--vermelho); }
-
-  /* Form */
-  .form-add { background:var(--cinza-bg); border-radius:var(--radius-sm); padding:1rem; margin-top:1rem; border:1px solid var(--cinza-borda); }
-  .form-add h4 { font-size:0.8rem; font-weight:500; color:var(--cinza-texto); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:10px; }
-  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
-  .form-row.full { grid-template-columns:1fr; }
-  .form-group { display:flex; flex-direction:column; gap:3px; }
-  .form-group label { font-size:0.72rem; color:var(--cinza-texto); font-weight:500; }
-  .form-group input { font-size:0.88rem; padding:8px 10px; border:1px solid var(--cinza-borda); border-radius:var(--radius-sm); background:#fff; color:var(--texto); outline:none; font-family:'DM Sans',sans-serif; }
-  .form-group input:focus { border-color:var(--verde); box-shadow:0 0 0 2px rgba(29,158,117,0.1); }
-  .btn-add { width:100%; padding:10px; border:none; border-radius:var(--radius-sm); background:var(--verde-escuro); color:#fff; font-size:0.88rem; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; margin-top:4px; transition:opacity 0.15s; }
-  .btn-add:hover { opacity:0.88; }
-  .btn-add:disabled { opacity:0.5; cursor:not-allowed; }
-
-  /* Caixa rows */
-  .caixa-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #F0EDE8; font-size:0.9rem; }
-  .caixa-row:last-child { border-bottom:none; }
-  .caixa-row .desc { color:var(--cinza-texto); font-size:0.82rem; }
-  .caixa-row .val { font-family:'Lora',serif; font-weight:600; font-size:1.05rem; }
-
-  /* Fiados */
-  .fiado-item { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #F0EDE8; font-size:0.88rem; }
-  .fiado-item:last-child { border-bottom:none; }
-  .fiado-total { display:flex; justify-content:space-between; align-items:center; padding:10px 0 0; border-top:2px solid var(--cinza-borda); margin-top:4px; }
-  .fiado-total .fl { color:var(--cinza-texto); font-weight:500; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.06em; }
-  .fiado-total .fv { color:var(--dourado); font-weight:700; font-family:'Lora',serif; font-size:1.05rem; }
-
-  /* Panel views */
-  .panel { display:none; }
-  .panel.active { display:block; }
-
-  /* Config banner */
-  .config-banner { background:#FFF8E7; border:1px solid #F5C4B3; border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:1rem; font-size:0.85rem; color:#71280F; }
-  .config-banner strong { display:block; margin-bottom:4px; }
-  .config-banner input { width:100%; margin-top:8px; padding:8px 10px; border:1px solid #F0997B; border-radius:var(--radius-sm); font-size:0.85rem; font-family:'DM Sans',sans-serif; background:#fff; outline:none; }
-  .config-banner button { margin-top:8px; padding:8px 16px; background:var(--verde-escuro); color:#fff; border:none; border-radius:var(--radius-sm); font-size:0.83rem; cursor:pointer; font-family:'DM Sans',sans-serif; }
-
-  .rodape { text-align:center; font-size:0.75rem; color:var(--cinza-texto); margin-top:2rem; opacity:0.7; }
-
-  @media(max-width:480px) {
-    .resumo-grid { grid-template-columns:1fr 1fr; }
-    .resumo-card.saldo { grid-column:1/-1; }
-    .page-header h1 { font-size:1.3rem; }
-    .saldo-destaque .sd-val { font-size:1.4rem; }
-    .form-row { grid-template-columns:1fr; }
-  }
-</style>
-</head>
-<body>
-
-<div class="page-header">
-  <img src="data:image/png;base64,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" alt="Logo IEADC" style="width:80px;height:80px;object-fit:contain;margin-bottom:0.5rem;border-radius:50%">
-  <h1>Círculo de Oração</h1>
-  <p>Controle de Caixa</p>
-
-</div>
-
-<button onclick="carregar()" title="Atualizar dados" style="position:fixed;bottom:24px;right:20px;z-index:999;width:48px;height:48px;border-radius:50%;background:#085041;color:#fff;border:none;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(8,80,65,0.4);display:flex;align-items:center;justify-content:center;">↻</button>
-<div class="container" id="app">
-  <div class="loader" id="loader">
-    <div class="spinner"></div>
-    Carregando dados...
-  </div>
-</div>
-
-<script>
-// ══════════════════════════════════════════
-// COLE AQUI A URL DO SEU APPS SCRIPT
-// ══════════════════════════════════════════
-let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUMu126kTX5VajJF4IClP-POvSJzCLsXeWf2dNWhSPpaj5mgClI5fePOaZcsmkmZNl/exec';
-
-let dados = { cultos:[], saidas:[], caixa:{conta:0,dinheiro:0}, fiados:[] };
-
-function fmt(v) {
-  return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-}
-
-async function api(params) {
-  const qs = Object.entries(params).map(([k,v]) => encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
-  const r = await fetch(SCRIPT_URL + '?' + qs);
-  return r.json();
-}
-
-async function carregar() {
-  if (!SCRIPT_URL) { renderConfigBanner(); return; }
-  document.getElementById('loader').style.display = 'block';
   try {
-    dados = await api({ action:'getDados' });
-    render();
-  } catch(e) {
-    document.getElementById('app').innerHTML = `<div class="loader">Erro ao carregar dados. Verifique a URL do script.</div>`;
-    renderConfigBanner(true);
+    if (action === 'getDados')       result = getDados();
+    else if (action === 'addCulto')  result = addCulto(p);
+    else if (action === 'addSaida')  result = addSaida(p);
+    else if (action === 'addFiado')  result = addFiado(p);
+    else if (action === 'setCaixa')  result = setCaixa(p);
+    else if (action === 'deleteRow') result = deleteRow(p.sheet, parseInt(p.index));
+    else result = { error: 'Ação desconhecida: ' + action };
+  } catch(err) {
+    result = { error: err.toString() };
   }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-function renderConfigBanner(append) {
-  const div = document.createElement('div');
-  div.className = 'config-banner';
-  div.innerHTML = `
-    <strong>⚙️ Configure a URL do Apps Script</strong>
-    Cole abaixo a URL gerada ao publicar o script no Google Apps Script:
-    <input type="text" id="url-input" placeholder="https://script.google.com/macros/s/.../exec" value="${SCRIPT_URL}">
-    <button onclick="salvarUrl()">Salvar e carregar</button>
-  `;
-  if (append) document.getElementById('app').appendChild(div);
-  else document.getElementById('app').innerHTML = '';
-  if (!append) document.getElementById('app').appendChild(div);
-}
-
-function salvarUrl() {
-  const url = document.getElementById('url-input').value.trim();
-  if (!url) return;
-  SCRIPT_URL = url;
-  localStorage.setItem('caixa_script_url', url);
-  carregar();
-}
-
-function render() {
-  const totalEntradas = dados.cultos.reduce((a,r)=>a+(parseFloat(r.values[1])||0),0);
-  const totalSaidas   = dados.saidas.reduce((a,r)=>a+(parseFloat(r.values[2])||0),0);
-  const totalCaixa    = (parseFloat(dados.caixa.conta)||0) + (parseFloat(dados.caixa.dinheiro)||0);
-  const totalFiados   = dados.fiados.reduce((a,r)=>a+(parseFloat(r.values[1])||0),0);
-
-  document.getElementById('app').innerHTML = `
-    <div class="resumo-grid">
-      <div class="resumo-card saldo">
-        <div class="label">Total em Caixa</div>
-        <div class="valor">${fmt(totalCaixa)}</div>
-        <div class="sub">conta + dinheiro</div>
-      </div>
-      <div class="resumo-card entrada">
-        <div class="label">Entradas Culto</div>
-        <div class="valor">${fmt(totalEntradas)}</div>
-        <div class="sub">${dados.cultos.length} culto(s)</div>
-      </div>
-      <div class="resumo-card saida">
-        <div class="label">Saídas</div>
-        <div class="valor">${fmt(totalSaidas)}</div>
-        <div class="sub">${dados.saidas.length} lançamento(s)</div>
-      </div>
-    </div>
-
-    <div class="saldo-destaque">
-      <div>
-        <div class="sd-label">Saldo disponível</div>
-        <div class="sd-val">${fmt(totalCaixa)}</div>
-      </div>
-      <div class="sd-icon">🏦</div>
-    </div>
-
-    <div class="tabs">
-      <button class="tab active" onclick="showPanel('cultos',this)">📥 Cultos</button>
-      <button class="tab" onclick="showPanel('saidas',this)">📤 Saídas</button>
-      <button class="tab" onclick="showPanel('caixa',this)">💰 Caixa</button>
-      <button class="tab" onclick="showPanel('fiados',this)">📋 Fiados</button>
-    </div>
-
-    <!-- CULTOS -->
-    <div id="panel-cultos" class="panel active">
-      <div class="secao">
-        <div class="secao-header">
-          <div class="secao-titulo">📥 Ofertas do Culto</div>
-          <span class="badge badge-verde">+${fmt(totalEntradas)}</span>
-        </div>
-        <div class="secao-body">
-          <table class="tabela">
-            <thead><tr><th>Data</th><th style="text-align:right">Valor</th><th></th></tr></thead>
-            <tbody>
-              ${dados.cultos.map(r=>`
-                <tr>
-                  <td>${formatarData(r.values[0])}</td>
-                  <td class="td-verde">${fmt(r.values[1])}</td>
-                  <td><button class="btn-del" onclick="deletar('Cultos',${r._index})" title="Remover">✕</button></td>
-                </tr>`).join('')}
-            </tbody>
-            <tfoot><tr class="total-row"><td>Total</td><td class="td-verde">${fmt(totalEntradas)}</td><td></td></tr></tfoot>
-          </table>
-          <div class="form-add">
-            <h4>+ Adicionar culto</h4>
-            <div class="form-row">
-              <div class="form-group"><label>Data</label><input type="date" id="c-data"></div>
-              <div class="form-group"><label>Valor (R$)</label><input type="number" id="c-valor" step="0.01" placeholder="0,00"></div>
-            </div>
-            <button class="btn-add" onclick="addCulto()">Registrar oferta</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SAÍDAS -->
-    <div id="panel-saidas" class="panel">
-      <div class="secao">
-        <div class="secao-header">
-          <div class="secao-titulo">📤 Saídas</div>
-          <span class="badge badge-vermelho">−${fmt(totalSaidas)}</span>
-        </div>
-        <div class="secao-body">
-          <table class="tabela">
-            <thead><tr><th>Data</th><th>Descrição</th><th style="text-align:right">Valor</th><th></th></tr></thead>
-            <tbody>
-              ${dados.saidas.map(r=>`
-                <tr>
-                  <td>${formatarData(r.values[0])}</td>
-                  <td>${r.values[1]}</td>
-                  <td class="td-vermelho">${fmt(r.values[2])}</td>
-                  <td><button class="btn-del" onclick="deletar('Saidas',${r._index})" title="Remover">✕</button></td>
-                </tr>`).join('')}
-            </tbody>
-            <tfoot><tr class="total-row"><td colspan="2">Total</td><td class="td-vermelho">${fmt(totalSaidas)}</td><td></td></tr></tfoot>
-          </table>
-          <div class="form-add">
-            <h4>+ Adicionar saída</h4>
-            <div class="form-row">
-              <div class="form-group"><label>Data</label><input type="date" id="s-data"></div>
-              <div class="form-group"><label>Valor (R$)</label><input type="number" id="s-valor" step="0.01" placeholder="0,00"></div>
-            </div>
-            <div class="form-row full">
-              <div class="form-group"><label>Descrição</label><input type="text" id="s-desc" placeholder="Ex: Pregadora, material..."></div>
-            </div>
-            <button class="btn-add" onclick="addSaida()">Registrar saída</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CAIXA -->
-    <div id="panel-caixa" class="panel">
-      <div class="secao">
-        <div class="secao-header">
-          <div class="secao-titulo">💰 Caixa Geral</div>
-        </div>
-        <div class="secao-body">
-          <div class="caixa-row">
-            <div><div>Em conta</div><div class="desc">Saldo bancário</div></div>
-            <div class="val" style="color:var(--verde)">${fmt(dados.caixa.conta)}</div>
-          </div>
-          <div class="caixa-row">
-            <div><div>Em dinheiro</div><div class="desc">Caixa físico</div></div>
-            <div class="val" style="color:var(--verde)">${fmt(dados.caixa.dinheiro)}</div>
-          </div>
-          <div class="caixa-row">
-            <div style="font-weight:600;font-family:'Lora',serif">Total</div>
-            <div class="val" style="font-size:1.2rem">${fmt(totalCaixa)}</div>
-          </div>
-          <div class="form-add">
-            <h4>✏️ Atualizar saldo</h4>
-            <div class="form-row">
-              <div class="form-group"><label>Em conta (R$)</label><input type="number" id="cx-conta" step="0.01" value="${dados.caixa.conta}"></div>
-              <div class="form-group"><label>Em dinheiro (R$)</label><input type="number" id="cx-din" step="0.01" value="${dados.caixa.dinheiro}"></div>
-            </div>
-            <button class="btn-add" onclick="updateCaixa()">Salvar saldo</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- FIADOS -->
-    <div id="panel-fiados" class="panel">
-      <div class="secao">
-        <div class="secao-header">
-          <div class="secao-titulo">📋 Fiados — Pão</div>
-          <span class="badge badge-dourado">${fmt(totalFiados)} a receber</span>
-        </div>
-        <div class="secao-body">
-          ${dados.fiados.map(r=>`
-            <div class="fiado-item">
-              <span>${r.values[0]}</span>
-              <div style="display:flex;align-items:center;gap:10px">
-                <span style="color:var(--dourado);font-weight:600;font-family:'Lora',serif">${fmt(r.values[1])}</span>
-                <button class="btn-del" onclick="deletar('Fiados',${r._index})" title="Remover">✕</button>
-              </div>
-            </div>`).join('')}
-          <div class="fiado-total">
-            <span class="fl">Total a receber</span>
-            <span class="fv">${fmt(totalFiados)}</span>
-          </div>
-          <div class="form-add">
-            <h4>+ Adicionar fiado</h4>
-            <div class="form-row">
-              <div class="form-group"><label>Nome</label><input type="text" id="f-nome" placeholder="Nome da pessoa"></div>
-              <div class="form-group"><label>Valor (R$)</label><input type="number" id="f-valor" step="0.01" placeholder="0,00"></div>
-            </div>
-            <button class="btn-add" onclick="addFiado()">Registrar fiado</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="rodape">Círculo de Oração · Dados sincronizados com Google Planilhas</div>
-  `;
-
-  // datas padrão hoje
-  const hoje = new Date().toISOString().split('T')[0];
-  ['c-data','s-data'].forEach(id => { const el=document.getElementById(id); if(el) el.value=hoje; });
-}
-
-function formatarData(val) {
+// Converte Date para string DD/MM/AAAA
+function fmtData(val) {
   if (!val) return '';
+  if (Object.prototype.toString.call(val) === '[object Date]') {
+    var d = Utilities.formatDate(val, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+    return d;
+  }
   return String(val);
 }
 
-function showPanel(id, btn) {
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  btn.classList.add('active');
+function getDados() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  return {
+    cultos: getSheet(ss, 'Cultos', [0]),
+    saidas: getSheet(ss, 'Saidas', [0]),
+    caixa:  getCaixa(ss),
+    fiados: getSheet(ss, 'Fiados', []),
+  };
 }
 
-async function addCulto() {
-  const data  = document.getElementById('c-data').value;
-  const valor = document.getElementById('c-valor').value;
-  if (!data || !valor) { alert('Preencha data e valor.'); return; }
-  setLoading('c-btn', true);
-  await api({ action:'addCulto', data, valor });
-  await carregar();
+// colsDatas: índices das colunas que são data
+function getSheet(ss, nome, colsDatas) {
+  const sh = ss.getSheetByName(nome);
+  if (!sh) return [];
+  const rows = sh.getDataRange().getValues();
+  rows.shift();
+  return rows.map(function(r, i) {
+    var vals = r.map(function(v, col) {
+      if (colsDatas.indexOf(col) >= 0) return fmtData(v);
+      return v;
+    });
+    return { _index: i + 2, values: vals };
+  });
 }
 
-async function addSaida() {
-  const data     = document.getElementById('s-data').value;
-  const valor    = document.getElementById('s-valor').value;
-  const descricao = document.getElementById('s-desc').value.trim();
-  if (!data || !valor || !descricao) { alert('Preencha todos os campos.'); return; }
-  await api({ action:'addSaida', data, valor, descricao });
-  await carregar();
+function getCaixa(ss) {
+  const sh = ss.getSheetByName('Caixa');
+  if (!sh) return { conta: 0, dinheiro: 0 };
+  return {
+    conta:    sh.getRange('B2').getValue(),
+    dinheiro: sh.getRange('B3').getValue(),
+  };
 }
 
-async function updateCaixa() {
-  const conta    = document.getElementById('cx-conta').value;
-  const dinheiro = document.getElementById('cx-din').value;
-  await api({ action:'setCaixa', conta, dinheiro });
-  await carregar();
+function addCulto(p) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Cultos');
+  sh.appendRow([p.data, parseFloat(p.valor)]);
+  return { ok: true };
 }
 
-async function addFiado() {
-  const nome  = document.getElementById('f-nome').value.trim();
-  const valor = document.getElementById('f-valor').value;
-  if (!nome || !valor) { alert('Preencha nome e valor.'); return; }
-  await api({ action:'addFiado', nome, valor });
-  await carregar();
+function addSaida(p) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Saidas');
+  sh.appendRow([p.data, p.descricao, parseFloat(p.valor)]);
+  return { ok: true };
 }
 
-async function deletar(sheet, index) {
-  if (!confirm('Remover este item?')) return;
-  await api({ action: 'deleteRow', sheet, index });
-  await carregar();
+function addFiado(p) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Fiados');
+  sh.appendRow([p.nome, parseFloat(p.valor)]);
+  return { ok: true };
 }
 
-function setLoading(id, state) {
-  const el = document.getElementById(id);
-  if (el) el.disabled = state;
+function setCaixa(p) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Caixa');
+  sh.getRange('B2').setValue(parseFloat(p.conta));
+  sh.getRange('B3').setValue(parseFloat(p.dinheiro));
+  return { ok: true };
 }
 
-// Inicia
-carregar();
+function deleteRow(sheetName, rowIndex) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  sh.deleteRow(rowIndex);
+  return { ok: true };
+}
 
-// Auto-refresh a cada 30 segundos
-setInterval(() => {
-  carregar();
-}, 30000);
-</script>
-</body>
-</html>
+function setup() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  let sh = ss.getSheetByName('Cultos') || ss.insertSheet('Cultos');
+  sh.clearContents();
+  sh.appendRow(['Data', 'Valor']);
+  sh.appendRow(['07/05/2026', 65.70]);
+  sh.appendRow(['14/05/2026', 156.50]);
+  sh.appendRow(['21/05/2026', 112.00]);
+  sh.appendRow(['28/05/2026', 129.80]);
+
+  sh = ss.getSheetByName('Saidas') || ss.insertSheet('Saidas');
+  sh.clearContents();
+  sh.appendRow(['Data', 'Descrição', 'Valor']);
+  sh.appendRow(['08/05/2026', 'Pregadora Elaine', 150.00]);
+  sh.appendRow(['21/05/2026', 'Pregadora Maria de Lurdes', 150.00]);
+  sh.appendRow(['28/05/2026', 'Pregadora Regina', 150.00]);
+  sh.appendRow(['08/05/2026', 'Papel pão', 21.90]);
+  sh.appendRow(['27/05/2026', 'Envelopes', 12.90]);
+
+  sh = ss.getSheetByName('Caixa') || ss.insertSheet('Caixa');
+  sh.clearContents();
+  sh.appendRow(['Tipo', 'Valor']);
+  sh.appendRow(['Em conta', 3935.36]);
+  sh.appendRow(['Em dinheiro', 2099.00]);
+
+  sh = ss.getSheetByName('Fiados') || ss.insertSheet('Fiados');
+  sh.clearContents();
+  sh.appendRow(['Nome', 'Valor']);
+  sh.appendRow(['Juninho', 15.00]);
+  sh.appendRow(['Claúdia (Vanessa)', 15.00]);
+  sh.appendRow(['Hélida', 15.00]);
+  sh.appendRow(['Mirian Mazali', 15.00]);
+  sh.appendRow(['Leila', 30.00]);
+  sh.appendRow(['Angélica', 30.00]);
+
+  Logger.log('Setup concluído!');
+}
