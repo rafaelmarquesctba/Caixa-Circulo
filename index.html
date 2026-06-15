@@ -163,13 +163,14 @@ async function api(params) {
 
 async function carregar() {
   if (!SCRIPT_URL) { renderConfigBanner(); return; }
-  document.getElementById('loader').style.display = 'block';
+  const loader = document.getElementById('loader');
+  if (loader) loader.style.display = 'block';
   try {
-    dados = await api({ action:'getDados' });
+    const novos = await api({ action:'getDados' });
+    dados = novos;
     render();
   } catch(e) {
-    document.getElementById('app').innerHTML = `<div class="loader">Erro ao carregar dados. Verifique a URL do script.</div>`;
-    renderConfigBanner(true);
+    console.error('Erro ao carregar:', e);
   }
 }
 
