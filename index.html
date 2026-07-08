@@ -199,7 +199,7 @@ function salvarUrl() {
 function render() {
   const totalEntradas = dados.cultos.reduce((a,r)=>a+(parseFloat(r.values[1])||0),0);
   const totalSaidas   = dados.saidas.reduce((a,r)=>a+(parseFloat(r.values[2])||0),0);
-  const totalCaixa    = (parseFloat(dados.caixa.conta)||0) + (parseFloat(dados.caixa.dinheiro)||0);
+  const totalCaixa    = (parseFloat(dados.caixa.conta)||0) + (parseFloat(dados.caixa.dinheiro)||0) + totalEntradas - totalSaidas;
   const totalFiados   = dados.fiados.reduce((a,r)=>a+(parseFloat(r.values[1])||0),0);
 
   document.getElementById('app').innerHTML = `
