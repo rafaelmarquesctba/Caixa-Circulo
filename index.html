@@ -144,6 +144,11 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxwKN7hKREdXnEpEH0RL
 let dados = { lancamentos:[], ajustes:{dinheiro:0,conta:0}, fiados:[] };
 let tipoAtual = 'entrada';
 let caixaAtual = 'dinheiro';
+let painelAtivo = 'lancamentos';
+let primeiraCarga = true;
+
+// IDs dos campos de formulário que precisam ser preservados entre atualizações
+const CAMPOS_FORM = ['n-data','n-valor','n-categoria','n-desc','f-nome','f-valor','aj-dinheiro','aj-conta'];
 
 function fmt(v) {
   return 'R$ ' + Number(v||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -155,12 +160,24 @@ async function api(params) {
   return r.json();
 }
 
+// Verifica se o usuário está com o foco em algum campo de formulário (digitando)
+function usuarioDigitando() {
+  const el = document.activeElement;
+  if (!el) return false;
+  return CAMPOS_FORM.includes(el.id);
+}
+
 async function carregar() {
+  // Evita interromper o usuário: se ele estiver digitando em algum campo,
+  // pula esta atualização automática (a próxima tentativa vem no próximo ciclo).
+  if (!primeiraCarga && usuarioDigitando()) return;
+
   const loader = document.getElementById('loader');
-  if (loader) loader.style.display = 'block';
+  if (loader && primeiraCarga) loader.style.display = 'block';
   try {
     dados = await api({ action:'getDados' });
     render();
+    primeiraCarga = false;
   } catch(e) { console.error(e); }
 }
 
@@ -187,6 +204,13 @@ function render() {
   const lanc = dados.lancamentos || [];
   const fiados = dados.fiados || [];
   const totalFiados = fiados.reduce((a,f)=>a+f.valor,0);
+
+  // Salva o que o usuário já tinha preenchido nos formulários antes de recriar o HTML
+  const valoresSalvos = {};
+  CAMPOS_FORM.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) valoresSalvos[id] = el.value;
+  });
 
   document.getElementById('app').innerHTML = `
     <div class="resumo-grid">
@@ -226,14 +250,14 @@ function render() {
     </div>
 
     <div class="tabs">
-      <button class="tab active" onclick="showPanel('lancamentos',this)">📋 Lançamentos</button>
-      <button class="tab" onclick="showPanel('novo',this)">➕ Novo</button>
-      <button class="tab" onclick="showPanel('fiados',this)">📌 Fiados</button>
-      <button class="tab" onclick="showPanel('ajuste',this)">⚙️ Ajuste</button>
+      <button class="tab ${painelAtivo==='lancamentos'?'active':''}" onclick="showPanel('lancamentos',this)">📋 Lançamentos</button>
+      <button class="tab ${painelAtivo==='novo'?'active':''}" onclick="showPanel('novo',this)">➕ Novo</button>
+      <button class="tab ${painelAtivo==='fiados'?'active':''}" onclick="showPanel('fiados',this)">📌 Fiados</button>
+      <button class="tab ${painelAtivo==='ajuste'?'active':''}" onclick="showPanel('ajuste',this)">⚙️ Ajuste</button>
     </div>
 
     <!-- LANÇAMENTOS -->
-    <div id="panel-lancamentos" class="panel active">
+    <div id="panel-lancamentos" class="panel ${painelAtivo==='lancamentos'?'active':''}">
       <div class="secao">
         <div class="secao-header">
           <div class="secao-titulo">📋 Histórico de Lançamentos</div>
@@ -261,19 +285,19 @@ function render() {
     </div>
 
     <!-- NOVO LANÇAMENTO -->
-    <div id="panel-novo" class="panel">
+    <div id="panel-novo" class="panel ${painelAtivo==='novo'?'active':''}">
       <div class="secao">
         <div class="secao-header">
           <div class="secao-titulo">➕ Novo Lançamento</div>
         </div>
         <div class="secao-body">
           <div class="tipo-toggle">
-            <button class="tipo-btn active-entrada" id="btn-entrada" onclick="setTipo('entrada')">📥 Entrada</button>
-            <button class="tipo-btn" id="btn-saida" onclick="setTipo('saida')">📤 Saída</button>
+            <button class="tipo-btn ${tipoAtual==='entrada'?'active-entrada':''}" id="btn-entrada" onclick="setTipo('entrada')">📥 Entrada</button>
+            <button class="tipo-btn ${tipoAtual==='saida'?'active-saida':''}" id="btn-saida" onclick="setTipo('saida')">📤 Saída</button>
           </div>
           <div class="caixa-toggle">
-            <button class="caixa-btn active" id="btn-dinheiro" onclick="setCaixa('dinheiro')">💵 Dinheiro</button>
-            <button class="caixa-btn" id="btn-conta" onclick="setCaixa('conta')">🏦 Conta</button>
+            <button class="caixa-btn ${caixaAtual==='dinheiro'?'active':''}" id="btn-dinheiro" onclick="setCaixa('dinheiro')">💵 Dinheiro</button>
+            <button class="caixa-btn ${caixaAtual==='conta'?'active':''}" id="btn-conta" onclick="setCaixa('conta')">🏦 Conta</button>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -309,7 +333,7 @@ function render() {
     </div>
 
     <!-- FIADOS -->
-    <div id="panel-fiados" class="panel">
+    <div id="panel-fiados" class="panel ${painelAtivo==='fiados'?'active':''}">
       <div class="secao">
         <div class="secao-header">
           <div class="secao-titulo">📌 Fiados — Pão</div>
@@ -341,7 +365,7 @@ function render() {
     </div>
 
     <!-- AJUSTE MANUAL -->
-    <div id="panel-ajuste" class="panel">
+    <div id="panel-ajuste" class="panel ${painelAtivo==='ajuste'?'active':''}">
       <div class="secao">
         <div class="secao-header">
           <div class="secao-titulo">⚙️ Ajuste de Saldo</div>
@@ -369,13 +393,21 @@ function render() {
     <div class="rodape">Círculo de Oração · Sincronizado com Google Planilhas</div>
   `;
 
-  // Data padrão hoje
-  const hoje = new Date().toISOString().split('T')[0];
+  // Restaura os valores que o usuário já tinha digitado
+  CAMPOS_FORM.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && valoresSalvos[id]) el.value = valoresSalvos[id];
+  });
+
+  // Data padrão hoje, só se o campo ainda estiver vazio
   const ndData = document.getElementById('n-data');
-  if (ndData) ndData.value = hoje;
+  if (ndData && !ndData.value) {
+    ndData.value = new Date().toISOString().split('T')[0];
+  }
 }
 
 function showPanel(id, btn) {
+  painelAtivo = id;
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
@@ -401,6 +433,9 @@ async function addLancamento() {
   const descricao = document.getElementById('n-desc').value.trim();
   if (!data || !valor) { alert('Preencha data e valor.'); return; }
   await api({ action:'addLancamento', data, tipo:tipoAtual, caixa:caixaAtual, categoria, descricao, valor });
+  // Limpa os campos após salvar, para o próximo lançamento
+  document.getElementById('n-valor').value = '';
+  document.getElementById('n-desc').value = '';
   await carregar();
 }
 
@@ -415,6 +450,8 @@ async function addFiado() {
   const valor = document.getElementById('f-valor').value;
   if (!nome || !valor) { alert('Preencha nome e valor.'); return; }
   await api({ action:'addFiado', nome, valor });
+  document.getElementById('f-nome').value = '';
+  document.getElementById('f-valor').value = '';
   await carregar();
 }
 
