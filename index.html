@@ -66,8 +66,18 @@
   .td-vermelho { text-align:right; font-weight:500; color:var(--vermelho); }
   .total-row td { font-weight:600; background:var(--cinza-bg); border-top:2px solid var(--cinza-borda); border-bottom:none; font-family:'Lora',serif; }
 
-  .btn-del { background:none; border:none; cursor:pointer; color:#ccc; font-size:1rem; padding:2px 4px; border-radius:4px; transition:color 0.15s; }
+  .btn-del { background:none; border:none; cursor:pointer; color:#ccc; font-size:1.05rem; padding:10px 12px; margin:-10px -12px; border-radius:4px; transition:color 0.15s; touch-action:manipulation; }
   .btn-del:hover { color:var(--vermelho); }
+
+  /* Diálogo próprio (substitui confirm()/alert() nativos, que falham em navegadores embutidos como o do WhatsApp/Instagram) */
+  .dlg-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center; z-index:2000; padding:1.25rem; }
+  .dlg-box { background:#fff; border-radius:var(--radius); padding:1.25rem; max-width:320px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,0.25); }
+  .dlg-msg { font-size:0.92rem; color:var(--texto); margin-bottom:1.1rem; line-height:1.4; }
+  .dlg-botoes { display:flex; gap:8px; }
+  .dlg-botoes button { flex:1; padding:10px; border-radius:var(--radius-sm); border:none; font-size:0.85rem; font-weight:500; cursor:pointer; font-family:'DM Sans',sans-serif; touch-action:manipulation; }
+  .dlg-cancelar { background:var(--cinza-bg); color:var(--texto); border:1px solid var(--cinza-borda) !important; }
+  .dlg-confirmar { background:var(--vermelho); color:#fff; }
+  .dlg-ok { background:var(--verde-escuro); color:#fff; }
 
   /* Tipo toggle */
   .tipo-toggle { display:flex; gap:6px; margin-bottom:10px; }
@@ -154,10 +164,61 @@ function fmt(v) {
   return 'R$ ' + Number(v||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
+// Trava simples: impede que dois cliques rápidos disparem a mesma operação duas vezes
+let ocupado = false;
+
+function gerarId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+// Substitui window.confirm/window.alert: em navegadores embutidos de app
+// (WhatsApp, Instagram, Facebook etc.) os diálogos nativos costumam ser
+// bloqueados ou retornar sem mostrar nada — por isso a exclusão "não fazia
+// nada" só no celular. Este diálogo é HTML puro, então funciona sempre.
+function confirmar(mensagem) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'dlg-overlay';
+    overlay.innerHTML = `
+      <div class="dlg-box">
+        <div class="dlg-msg">${mensagem}</div>
+        <div class="dlg-botoes">
+          <button class="dlg-cancelar">Cancelar</button>
+          <button class="dlg-confirmar">Remover</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const fechar = (resultado) => { overlay.remove(); resolve(resultado); };
+    overlay.querySelector('.dlg-cancelar').onclick = () => fechar(false);
+    overlay.querySelector('.dlg-confirmar').onclick = () => fechar(true);
+    overlay.onclick = (e) => { if (e.target === overlay) fechar(false); };
+  });
+}
+
+function avisar(mensagem) {
+  return new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'dlg-overlay';
+    overlay.innerHTML = `
+      <div class="dlg-box">
+        <div class="dlg-msg">${mensagem}</div>
+        <div class="dlg-botoes"><button class="dlg-ok">OK</button></div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const fechar = () => { overlay.remove(); resolve(); };
+    overlay.querySelector('.dlg-ok').onclick = fechar;
+    overlay.onclick = (e) => { if (e.target === overlay) fechar(); };
+  });
+}
+
 async function api(params) {
   const qs = Object.entries(params).map(([k,v]) => encodeURIComponent(k)+'='+encodeURIComponent(v)).join('&');
   const r = await fetch(SCRIPT_URL + '?' + qs);
-  return r.json();
+  if (!r.ok) throw new Error('Servidor respondeu ' + r.status);
+  const json = await r.json();
+  if (json && json.error) throw new Error(json.error);
+  return json;
 }
 
 // Verifica se o usuário está com o foco em algum campo de formulário (digitando)
@@ -178,7 +239,13 @@ async function carregar() {
     dados = await api({ action:'getDados' });
     render();
     primeiraCarga = false;
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    console.error(e);
+    if (primeiraCarga) {
+      document.getElementById('app').innerHTML =
+        '<div class="loader">Não foi possível carregar os dados.<br><small>' + e.message + '</small></div>';
+    }
+  }
 }
 
 function calcular() {
@@ -199,9 +266,21 @@ function calcular() {
   return { saldoDinheiro, saldoConta, totalEntradas, totalSaidas, totalGeral };
 }
 
+// Marca lançamentos idênticos (mesma data, tipo, caixa, valor e descrição)
+function marcarDuplicados(lanc) {
+  const contagem = {};
+  lanc.forEach(l => {
+    const chave = [l.data, l.tipo, l.caixa, l.valor, l.descricao || l.categoria].join('|');
+    contagem[chave] = (contagem[chave] || 0) + 1;
+    l._chave = chave;
+  });
+  lanc.forEach(l => { l._dup = contagem[l._chave] > 1; });
+  return lanc;
+}
+
 function render() {
   const c = calcular();
-  const lanc = dados.lancamentos || [];
+  const lanc = marcarDuplicados(dados.lancamentos || []);
   const fiados = dados.fiados || [];
   const totalFiados = fiados.reduce((a,f)=>a+f.valor,0);
 
@@ -267,15 +346,16 @@ function render() {
             <thead><tr><th>Data</th><th>Descrição</th><th>Caixa</th><th style="text-align:right">Valor</th><th></th></tr></thead>
             <tbody>
               ${lanc.map(l=>`
-                <tr>
+                <tr${l._dup ? ' style="background:#FFF9E8"' : ''}>
                   <td>${l.data}</td>
                   <td>
                     ${l.descricao || l.categoria}
                     <span class="badge ${l.tipo==='entrada'?'badge-verde':'badge-vermelho'}" style="margin-left:4px">${l.tipo==='entrada'?'E':'S'}</span>
+                    ${l._dup ? '<span class="badge badge-dourado" style="margin-left:4px" title="Existe outro lançamento idêntico">⚠ duplicado</span>' : ''}
                   </td>
                   <td><span class="badge ${l.caixa==='dinheiro'?'badge-dourado':'badge-azul'}">${l.caixa==='dinheiro'?'💵':'🏦'}</span></td>
                   <td class="${l.tipo==='entrada'?'td-verde':'td-vermelho'}">${l.tipo==='entrada'?'+':'-'}${fmt(l.valor)}</td>
-                  <td><button class="btn-del" onclick="deletarLanc(${l._index})">✕</button></td>
+                  <td><button class="btn-del" onclick="deletarLanc('${l.id}')">✕</button></td>
                 </tr>`).join('')}
             </tbody>
           </table>
@@ -345,7 +425,7 @@ function render() {
               <span>${f.nome}</span>
               <div style="display:flex;align-items:center;gap:10px">
                 <span style="color:var(--dourado);font-weight:600;font-family:'Lora',serif">${fmt(f.valor)}</span>
-                <button class="btn-del" onclick="deletarFiado(${f._index})">✕</button>
+                <button class="btn-del" onclick="deletarFiado('${f.id}')">✕</button>
               </div>
             </div>`).join('')}
           <div class="fiado-total">
@@ -427,46 +507,102 @@ function setCaixa(c) {
 }
 
 async function addLancamento() {
+  if (ocupado) return;
   const data      = document.getElementById('n-data').value;
   const valor     = document.getElementById('n-valor').value;
   const categoria = document.getElementById('n-categoria').value;
   const descricao = document.getElementById('n-desc').value.trim();
-  if (!data || !valor) { alert('Preencha data e valor.'); return; }
-  await api({ action:'addLancamento', data, tipo:tipoAtual, caixa:caixaAtual, categoria, descricao, valor });
-  // Limpa os campos após salvar, para o próximo lançamento
-  document.getElementById('n-valor').value = '';
-  document.getElementById('n-desc').value = '';
-  await carregar();
+  if (!data || !valor) { await avisar('Preencha data e valor.'); return; }
+
+  ocupado = true;
+  try {
+    // O id é gerado aqui. Se a requisição for reenviada, o backend reconhece
+    // o mesmo id e não grava duas vezes.
+    await api({ action:'addLancamento', id:gerarId(), data, tipo:tipoAtual, caixa:caixaAtual, categoria, descricao, valor });
+    document.getElementById('n-valor').value = '';
+    document.getElementById('n-desc').value = '';
+    await carregar();
+  } catch (e) {
+    await avisar('Não foi possível registrar: ' + e.message);
+  } finally {
+    ocupado = false;
+  }
 }
 
-async function deletarLanc(index) {
-  if (!confirm('Remover este lançamento?')) return;
-  await api({ action:'deleteRow', sheet:'Lancamentos', index });
-  await carregar();
+async function deletarLanc(id) {
+  if (ocupado) return;
+  if (!id || id === 'undefined') {
+    await avisar('Este lançamento está sem id. Atualize a página (↻) e tente de novo.');
+    return;
+  }
+  if (!(await confirmar('Remover este lançamento?'))) return;
+
+  ocupado = true;
+  try {
+    await api({ action:'deleteLancamento', id });
+    await carregar();
+  } catch (e) {
+    await avisar('Não foi possível excluir: ' + e.message);
+    await carregar();
+  } finally {
+    ocupado = false;
+  }
 }
 
 async function addFiado() {
+  if (ocupado) return;
   const nome  = document.getElementById('f-nome').value.trim();
   const valor = document.getElementById('f-valor').value;
-  if (!nome || !valor) { alert('Preencha nome e valor.'); return; }
-  await api({ action:'addFiado', nome, valor });
-  document.getElementById('f-nome').value = '';
-  document.getElementById('f-valor').value = '';
-  await carregar();
+  if (!nome || !valor) { await avisar('Preencha nome e valor.'); return; }
+
+  ocupado = true;
+  try {
+    await api({ action:'addFiado', id:gerarId(), nome, valor });
+    document.getElementById('f-nome').value = '';
+    document.getElementById('f-valor').value = '';
+    await carregar();
+  } catch (e) {
+    await avisar('Não foi possível registrar: ' + e.message);
+  } finally {
+    ocupado = false;
+  }
 }
 
-async function deletarFiado(index) {
-  if (!confirm('Remover este fiado?')) return;
-  await api({ action:'deleteFiado', index });
-  await carregar();
+async function deletarFiado(id) {
+  if (ocupado) return;
+  if (!id || id === 'undefined') {
+    await avisar('Este fiado está sem id. Atualize a página (↻) e tente de novo.');
+    return;
+  }
+  if (!(await confirmar('Remover este fiado?'))) return;
+
+  ocupado = true;
+  try {
+    await api({ action:'deleteFiado', id });
+    await carregar();
+  } catch (e) {
+    await avisar('Não foi possível excluir: ' + e.message);
+    await carregar();
+  } finally {
+    ocupado = false;
+  }
 }
 
 async function salvarAjuste() {
+  if (ocupado) return;
   const dinheiro = document.getElementById('aj-dinheiro').value;
   const conta    = document.getElementById('aj-conta').value;
-  await api({ action:'ajusteManual', dinheiro, conta });
-  await carregar();
-  alert('Ajuste salvo!');
+
+  ocupado = true;
+  try {
+    await api({ action:'ajusteManual', dinheiro, conta });
+    await carregar();
+    await avisar('Ajuste salvo!');
+  } catch (e) {
+    await avisar('Não foi possível salvar o ajuste: ' + e.message);
+  } finally {
+    ocupado = false;
+  }
 }
 
 // Inicia
